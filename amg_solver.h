@@ -10,6 +10,7 @@ namespace amg {
 
 class smoother;
 class coarsener;
+class linear_solver;
 
 class amg_solver
 {
@@ -24,7 +25,7 @@ private:
     boost::property_tree::ptree &pt_;
     std::shared_ptr<smoother> smooth_;
     std::shared_ptr<coarsener> coarsen_;
-//    std::shared_ptr<linearsovler> solver_;
+    std::shared_ptr<linear_solver> solver_;
 };
 
 }

@@ -33,16 +33,17 @@ void gauss_seidel::iteration_body(const SpMatCSR &A, const Vec &rhs, Vec &x, con
 //==============================================================================
 #define RED true
 #define BLACK false
-red_black_gauss_seidel::red_black_gauss_seidel(const SpMatCSR &A) {
-     mark_red_black_tag(A);
-}
 
 void red_black_gauss_seidel::apply_prev_smooth(const SpMatCSR &A, const Vec &rhs, Vec &x) const {
+    if ( tag_.empty() )
+        mark_red_black_tag(A);
     apply(A, rhs, x, RED);
     apply(A, rhs, x, BLACK);
 }
 
 void red_black_gauss_seidel::apply_post_smooth(const SpMatCSR &A, const Vec &rhs, Vec &x) const {
+    if ( tag_.empty() )
+        mark_red_black_tag(A);
     apply(A, rhs, x, BLACK);
     apply(A, rhs, x, RED);
 }

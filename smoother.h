@@ -30,7 +30,6 @@ class red_black_gauss_seidel : public smoother
 {
 public:
     typedef bool color;
-    red_black_gauss_seidel(const SpMatCSR &A);
     void apply_prev_smooth(const SpMatCSR &A, const Vec &rhs, Vec &x) const;
     void apply_post_smooth(const SpMatCSR &A, const Vec &rhs, Vec &x) const;
 private:
