@@ -1,3 +1,6 @@
+#ifndef AMG_CONFIG_H
+#define AMG_CONFIG_H
+
 typedef double scalar;
 
 enum Smoother {
@@ -12,6 +15,8 @@ enum Coarsener {
 };
 
 enum LinearSolver {
-    CG,
-    BICGSTAB
+    SUPERLU,
+    SIMPLICIAL_CHOLESKY
 };
+
+#endif
