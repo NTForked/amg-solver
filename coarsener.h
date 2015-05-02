@@ -1,3 +1,4 @@
+#include <memory>
 #include <Eigen/Sparse>
 #include "config.h"
 
@@ -6,11 +7,12 @@ namespace amg {
 class coarsener
 {
 public:
-    typedef std::pair<Eigen::SparseMatrix<T, Eigen::RowMajor>,
-    Eigen::SparseMatrix<scalar, Eigen::RowMajor>> transfer_type;
+    typedef Eigen::SparseMatrix<scalar, Eigen::RowMajor> SpmatCSR;
+    typedef Eigen::Matrix<scalar, -1, 1> Vec;
+    typedef std::pair<SpmatCSR, SpmatCSR> transfer_type;
     virtual ~coarsener() {}
-    virtual Eigen::SparseMatrix<scalar,  Eigen::RowMajor> transfer_operator(const Eigen::SparseMatrix<scalar> &A) = 0;
-    virtual transfer_type coarse_operator(const Eigen::SparseMatrix<scalar> &A) = 0;
+    virtual transfer_type transfer_operator(const SpmatCSR &A) = 0;
+    virtual SpmatCSR coarse_operator(const SpmatCSR &A, const SpmatCSR &R, const SpmatCSR &P) = 0;
 };
 
 class ruge_stuben : public coarsener

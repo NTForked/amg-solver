@@ -1,3 +1,4 @@
+#include <Eigen/Sparse>
 
 class amg_solver
 {
@@ -6,4 +7,6 @@ public:
     int set_matrix();
     int vcycle();
 private:
+    Eigen::ConjugateGradient<> sol;
+    Eigen::BiCGSTAB<> sol;
 };

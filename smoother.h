@@ -7,32 +7,45 @@ namespace amg {
 class smoother
 {
 public:
+    typedef Eigen::SparseMatrix<scalar, Eigen::RowMajor> SpmatCSR;
+    typedef Eigen::Matrix<scalar, -1, 1> Vec;
     virtual ~smoother() {}
-    virtual int apply_pre_smooth(const Eigen::SparseMatrix<scalar, Eigen::RowMajor> &A,
-                                 const Eigen::Matrix<T, -1, 1> &rhs,
-                                 Eigen::Matrix<T, -1, 1> &x) = 0;
-    virtual int apply_post_smooth(const Eigen::SparseMatrix<value_type, Eigen::RowMajor> &A,
-                                  const Eigen::Matirx<T, -1, 1> &rhs,
-                                  Eigen::Matrix<T, -1, 1> &x) = 0;
+    virtual void apply_prev_smooth(const SpmatCSR &A, const Vec &rhs, Vec &x) const = 0;
+    virtual void apply_post_smooth(const SpmatCSR &A, const Vec &rhs, Vec &x) const = 0;
 };
 
-class guass_seidel : public smoother
+class gauss_seidel : public smoother
 {
 public:
-    int apply_post_smooth(const Eigen::SparseMatrix<value_type, Eigen::RowMajor> &A, const Eigen::Matirx<T, _Tp2, _Tp3> &rhs, Eigen::Matrix<T, _Tp2, _Tp3> &x);
-    int apply_post_smooth(const Eigen::SparseMatrix<value_type, Eigen::RowMajor> &A, const Eigen::Matirx<T, _Tp2, _Tp3> &rhs, Eigen::Matrix<T, _Tp2, _Tp3> &x);
+    void apply_prev_smooth(const SpmatCSR &A, const Vec &rhs, Vec &x) const;
+    void apply_post_smooth(const SpmatCSR &A, const Vec &rhs, Vec &x) const;
 private:
-    int iteration_body();
+    void iteration_body(const SpmatCSR &A, const Vec &rhs, Vec &x, const size_t i) const;
 };
 
-class black_red_guass_seidel : public smoother
+class red_black_gauss_seidel : public smoother
 {
-
+public:
+    typedef bool color;
+    red_black_gauss_seidel(const SpmatCSR &A);
+    void apply_prev_smooth(const SpmatCSR &A, const Vec &rhs, Vec &x) const;
+    void apply_post_smooth(const SpmatCSR &A, const Vec &rhs, Vec &x) const;
+private:
+    void mark_red_black_tag(const SpmatCSR &A);
+    void apply(const SpmatCSR &A, const Vec &rhs, Vec &x, color colour) const;
+    std::vector<color> tag_;
 };
 
 class damped_jacobi : public smoother
 {
-
+public:
+    damped_jacobi();
+    damped_jacobi(const scalar damping);
+    void apply_prev_smooth(const SpmatCSR &A, const Vec &rhs, Vec &x) const;
+    void apply_post_smooth(const SpmatCSR &A, const Vec &rhs, Vec &x) const;
+private:
+    void apply(const SpmatCSR &A, const Vec &rhs, Vec &x) const;
+    const scalar damping_;
 };
 
 }
