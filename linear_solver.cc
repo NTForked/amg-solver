@@ -26,9 +26,9 @@ int eigen_cholesky_solver::solve(const spmat_csr &A, const vec &rhs, vec &x) con
 
 int eigen_lu_solver::solve(const spmat_csr &A, const vec &rhs, vec &x) const {
     cout << "\t@this is " << name() << "\n";
-    const SparseMatrix<double> Acsc = A;
+    const SparseMatrix<double> Ac = A;
     UmfPackLU<SparseMatrix<double>> solver;
-    solver.compute(Acsc);
+    solver.compute(Ac);
     if ( solver.info() != Success ) {
         cerr << "\t@factorization failed\n";
         return __LINE__;

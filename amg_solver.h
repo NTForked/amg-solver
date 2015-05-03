@@ -15,12 +15,12 @@ class linear_solver;
 class amg_solver
 {
 public:
+    typedef bool color;
     typedef Eigen::SparseMatrix<scalar, Eigen::RowMajor> spmat_csr;
     typedef Eigen::Matrix<scalar, -1, 1> vec;
-    typedef std::pair<spmat_csr, spmat_csr> transfer_type;
+    typedef std::pair<std::shared_ptr<spmat_csr>, std::shared_ptr<spmat_csr>> transfer_type;
     amg_solver(boost::property_tree::ptree &pt);
-    int init();
-    int vcycle(const spmat_csr &A, const vec &rhs, vec &x, const size_t curr) const;
+    static void tag_red_black(const spmat_csr &A, std::vector<bool> &tag);
 private:
     boost::property_tree::ptree &pt_;
     std::shared_ptr<smoother> smooth_;

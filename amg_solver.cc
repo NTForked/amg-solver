@@ -1,5 +1,6 @@
 #include "amg_solver.h"
 
+#include <queue>
 
 #include "smoother.h"
 #include "coarsener.h"
@@ -9,60 +10,32 @@ using namespace std;
 
 namespace amg {
 
-int amg_solver::init() {
-    const string smooth_type = pt_.get<string>("smooth");
-    if ( smooth_type == "gauss_seidel" ) {
-        smooth_.reset(new gauss_seidel);
-    } else if ( smooth_type == "damped_jacobi" ) {
-        smooth_.reset(new damped_jacobi);
-    } else if ( smooth_type == "red_black_gauss_seidel" ) {
-        smooth_.reset(new red_black_gauss_seidel);
-    } else {
-        ;
+void amg_solver::tag_red_black(const spmat_csr &A, std::vector<bool> &tag) {
+    const color RED = true;
+    queue<pair<size_t, color>> q;
+    const size_t dim = A.cols();
+    vector<bool> vis(dim, false);
+    tag.resize(dim);
+    for (size_t id = 0; id < dim; ++id) {
+        if ( vis[id] )
+            continue;
+        vis[id] = true;
+        q.push(std::make_pair(id, RED));
+        while ( !q.empty() ) {
+            pair<size_t, color> curr = q.front();
+            q.pop();
+            tag[curr.first] = curr.second;
+            for (spmat_csr::InnerIterator it(A, id); it; ++it) {
+                size_t next = it.col();
+                color rb = !curr.second;
+                if ( !vis[next] ) {
+                    vis[next] = true;
+                    q.push(make_pair(next, rb));
+                }
+            }
+        }
     }
-
-    const string coarsen_type = pt_.get<string>("coarsen");
-    if ( coarsen_type == "ruge_stuben" )
-        coarsen_.reset(new ruge_stuben);
-    else if ( coarsen_type == "aggregation" )
-        coarsen_.reset(new aggregation);
-    else
-        ;
-
-    const string ls_type = pt_.get<string>("linear_solver");
-    if ( ls_type == "LU" )
-        solver_.reset(new eigen_lu_solver);
-    else if ( ls_type == "Cholesky" )
-        solver_.reset(new eigen_cholesky_solver);
-    else
-        ;
+    return;
 }
-
-int amg_solver::vcycle(const spmat_csr &A, const vec &rhs, vec &x, const size_t curr) const {
-    const size_t prev_smooth_times = pt_.get<size_t>("prev_smooth_times");
-    for (size_t cnt = 0; cnt < prev_smooth_times; ++cnt)
-        smooth_->apply_prev_smooth(A, rhs, x);
-
-    transfer_type PR = coarsen_->transfer_operator(A);
-    spmat_csr Ag = coarsen_->coarse_operator(A, PR.first, PR.second);
-
-    vec rh = rhs-A*x;
-    vec r2h = PR.first*rh;
-    vec e2h = vec::Zero(r2h.rows());
-
-    if ( curr == 0 ) {
-
-    } else {
-        vcycle(Ag, r2h, e2h, curr-1);
-    }
-
-    vec eh = PR.second * e2h;
-    x += eh;
-
-    const size_t post_smooth_times = pt_.get<size_t>("post_smooth_times");
-    for (size_t cnt = 0; cnt < post_smooth_times; ++cnt)
-        smooth_->apply_post_smooth(A, rhs, x);
-}
-
 
 }
