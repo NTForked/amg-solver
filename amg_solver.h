@@ -15,12 +15,12 @@ class linear_solver;
 class amg_solver
 {
 public:
-    typedef Eigen::SparseMatrix<scalar, Eigen::RowMajor> SpMatCSR;
-    typedef Eigen::Matrix<scalar, -1, 1> Vec;
-    typedef std::pair<SpMatCSR, SpMatCSR> transfer_type;
+    typedef Eigen::SparseMatrix<scalar, Eigen::RowMajor> spmat_csr;
+    typedef Eigen::Matrix<scalar, -1, 1> vec;
+    typedef std::pair<spmat_csr, spmat_csr> transfer_type;
     amg_solver(boost::property_tree::ptree &pt);
     int init();
-    int vcycle(const SpMatCSR &A, const Vec &rhs, Vec &x, const size_t curr) const;
+    int vcycle(const spmat_csr &A, const vec &rhs, vec &x, const size_t curr) const;
 private:
     boost::property_tree::ptree &pt_;
     std::shared_ptr<smoother> smooth_;

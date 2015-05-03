@@ -7,22 +7,22 @@ using namespace Eigen;
 
 namespace amg {
 //==============================================================================
-void gauss_seidel::apply_prev_smooth(const SpMatCSR &A, const Vec &rhs, Vec &x) const {
+void gauss_seidel::apply_prev_smooth(const spmat_csr &A, const vec &rhs, vec &x, std::vector<bool> *color_tag) const {
     const size_t row = A.rows();
     for (size_t i = 0; i < row; ++i)
         iteration_body(A, rhs, x, i);
 }
 
-void gauss_seidel::apply_post_smooth(const SpMatCSR &A, const Vec &rhs, Vec &x) const {
+void gauss_seidel::apply_post_smooth(const spmat_csr &A, const vec &rhs, vec &x, std::vector<bool> *color_tag) const {
     const size_t row = A.rows();
     for (size_t i = row-1; i >= 0; --i)
         iteration_body(A, rhs, x, i);
 }
 
-void gauss_seidel::iteration_body(const SpMatCSR &A, const Vec &rhs, Vec &x, const size_t i) const {
+void gauss_seidel::iteration_body(const spmat_csr &A, const vec &rhs, vec &x, const size_t i) const {
     scalar temp = rhs[i];
     scalar diag = 1.0;
-    for (SpMatCSR::InnerIterator it(A, i); it; ++it) {
+    for (spmat_csr::InnerIterator it(A, i); it; ++it) {
         if ( it.col() == i )
             diag = it.value();
         else
@@ -34,21 +34,21 @@ void gauss_seidel::iteration_body(const SpMatCSR &A, const Vec &rhs, Vec &x, con
 #define RED true
 #define BLACK false
 
-void red_black_gauss_seidel::apply_prev_smooth(const SpMatCSR &A, const Vec &rhs, Vec &x) const {
+void red_black_gauss_seidel::apply_prev_smooth(const spmat_csr &A, const vec &rhs, vec &x) const {
     if ( tag_.empty() )
         mark_red_black_tag(A);
     apply(A, rhs, x, RED);
     apply(A, rhs, x, BLACK);
 }
 
-void red_black_gauss_seidel::apply_post_smooth(const SpMatCSR &A, const Vec &rhs, Vec &x) const {
+void red_black_gauss_seidel::apply_post_smooth(const spmat_csr &A, const vec &rhs, vec &x) const {
     if ( tag_.empty() )
         mark_red_black_tag(A);
     apply(A, rhs, x, BLACK);
     apply(A, rhs, x, RED);
 }
 
-void red_black_gauss_seidel::mark_red_black_tag(const SpMatCSR &A) {
+void red_black_gauss_seidel::mark_red_black_tag(const spmat_csr &A) {
     queue<pair<size_t, color>> q;
     vector<bool> vis(A.cols(), false);
     tag_.resize(A.cols());
@@ -61,7 +61,7 @@ void red_black_gauss_seidel::mark_red_black_tag(const SpMatCSR &A) {
             pair<size_t, color> curr = q.front();
             q.pop();
             tag_[curr.first] = curr.second;
-            for (SpMatCSR::InnerIterator it(A, id); it; ++it) {
+            for (spmat_csr::InnerIterator it(A, id); it; ++it) {
                 size_t next = it.col();
                 color rb = !curr.second;
                 if ( !vis[next] ) {
@@ -74,14 +74,14 @@ void red_black_gauss_seidel::mark_red_black_tag(const SpMatCSR &A) {
     return;
 }
 
-void red_black_gauss_seidel::apply(const SpMatCSR &A, const Vec &rhs, Vec &x, color colour) const {
+void red_black_gauss_seidel::apply(const spmat_csr &A, const vec &rhs, vec &x, color colour) const {
 #pragma omp parallel for
     for (size_t row = 0; row < A.rows(); ++row) {
         if ( tag_[row] != colour )
             continue;
         scalar temp = rhs[row];
         scalar diag = 1.0;
-        for (SpMatCSR::InnerIterator it(A, row); it; ++it) {
+        for (spmat_csr::InnerIterator it(A, row); it; ++it) {
             if ( row == it.col() )
                 diag = it.value();
             else
@@ -97,19 +97,19 @@ damped_jacobi::damped_jacobi() : damping_(0.72) {}
 
 damped_jacobi::damped_jacobi(const scalar damping) : damping_(damping) {}
 
-void damped_jacobi::apply_prev_smooth(const SpMatCSR &A, const Vec &rhs, Vec &x) const {
+void damped_jacobi::apply_prev_smooth(const spmat_csr &A, const vec &rhs, vec &x) const {
     apply(A, rhs, x);
 }
 
-void damped_jacobi::apply_post_smooth(const SpMatCSR &A, const Vec &rhs, Vec &x) const {
+void damped_jacobi::apply_post_smooth(const spmat_csr &A, const vec &rhs, vec &x) const {
     apply(A, rhs, x);
 }
 
-void damped_jacobi::apply(const SpMatCSR &A, const Vec &rhs, Vec &x) const {
+void damped_jacobi::apply(const spmat_csr &A, const vec &rhs, vec &x) const {
     for (size_t row = 0; row < A.rows(); ++row) {
         scalar diag = 1.0;
         scalar temp = rhs[row];
-        for (SpMatCSR::InnerIterator it(A, row); it; ++it) {
+        for (spmat_csr::InnerIterator it(A, row); it; ++it) {
             if ( row == it.col() )
                 diag = it.value();
             temp -= it.value()*x[it.col()];
