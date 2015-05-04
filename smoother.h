@@ -1,17 +1,13 @@
 #ifndef AMG_SMOOTHER_H
 #define AMG_SMOOTHER_H
 
-#include <Eigen/Sparse>
-
-#include "config.h"
+#include "type.h"
 
 namespace amg {
 
 class smoother
 {
 public:
-    typedef Eigen::SparseMatrix<scalar, Eigen::RowMajor> spmat_csr;
-    typedef Eigen::Matrix<scalar, -1, 1> vec;
     virtual ~smoother() {}
     virtual void apply_prev_smooth(const spmat_csr &A, const vec &rhs, vec &x, const std::vector<bool> *color_tag) const = 0;
     virtual void apply_post_smooth(const spmat_csr &A, const vec &rhs, vec &x, const std::vector<bool> *color_tag) const = 0;
