@@ -18,7 +18,8 @@ public:
     typedef bool color;
     typedef Eigen::SparseMatrix<scalar, Eigen::RowMajor> spmat_csr;
     typedef Eigen::Matrix<scalar, -1, 1> vec;
-    typedef std::pair<std::shared_ptr<spmat_csr>, std::shared_ptr<spmat_csr>> transfer_type;
+    typedef std::shared_ptr<spmat_csr> ptr_spmat_csr;
+    typedef std::pair<ptr_spmat_csr, ptr_spmat_csr> transfer_type;
     amg_solver(boost::property_tree::ptree &pt);
     static void tag_red_black(const spmat_csr &A, std::vector<bool> &tag);
 private:
