@@ -8,9 +8,9 @@ using namespace Eigen;
 
 namespace amg {
 
-int eigen_cholesky_solver::solve(const spmat_csr &A, const vec &rhs, vec &x) const {
+int eigen_cholesky_solver::solve(const spmat_csc &A, const vec &rhs, vec &x) const {
     cout << "\t@this is " << name() << "\n";
-    SimplicialCholesky<SparseMatrix<double>> solver;
+    SimplicialCholesky<spmat_csc> solver;
     solver.compute(A);
     if ( solver.info() != Success ) {
         cerr << "\t@factorization failed\n";
@@ -24,11 +24,10 @@ int eigen_cholesky_solver::solve(const spmat_csr &A, const vec &rhs, vec &x) con
     return 0;
 }
 
-int eigen_lu_solver::solve(const spmat_csr &A, const vec &rhs, vec &x) const {
+int eigen_lu_solver::solve(const spmat_csc &A, const vec &rhs, vec &x) const {
     cout << "\t@this is " << name() << "\n";
-    const SparseMatrix<double> Ac = A;
-    UmfPackLU<SparseMatrix<double>> solver;
-    solver.compute(Ac);
+    UmfPackLU<spmat_csc> solver;
+    solver.compute(A);
     if ( solver.info() != Success ) {
         cerr << "\t@factorization failed\n";
         return __LINE__;
