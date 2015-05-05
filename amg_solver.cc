@@ -40,7 +40,8 @@ amg_solver::amg_solver()
       nbr_inner_cycle_(1),
       nbr_outer_cycle_(1),
       nbr_prev_(2),
-      nbr_post_(2) {
+      nbr_post_(2),
+      use_rb_gs_(false) {
     coarsen_ = std::make_shared<ruge_stuben>();
 }
 
@@ -49,8 +50,9 @@ amg_solver::amg_solver(const boost::property_tree::ptree &pt)
     nbr_levels_ = pt_.get<size_t>("#levels");
     nbr_inner_cycle_ = pt_.get<size_t>("#cycle");
     nbr_outer_cycle_ = pt_.get<size_t>("#iteration");
-    nbr_prev_ = pt_.get<size_t>("#prev-smooth");
-    nbr_post_ = pt_.get<size_t>("#post-smooth");
+    nbr_prev_ = pt_.get<size_t>("#prev_smooth");
+    nbr_post_ = pt_.get<size_t>("#post_smooth");
+    use_rb_gs_ = pt_.get<bool>("red_black_gauss_seidel");
     /// alternative according to user's settings
     coarsen_ = make_shared<ruge_stuben>();
 }
@@ -68,7 +70,7 @@ int amg_solver::compute(const spmat_csr &M) {
 
     for (size_t i = 0; i < nbr_levels_-1; ++i) {
         std::tie(P, R) = coarsen_->transfer_operator(*A);
-        levels_.push_back(level(A, P, R));
+        levels_.push_back(level(A, P, R, use_rb_gs_));
         if ( A.get() && P.get() && R.get() )
             A = coarsen_->coarse_operator(*A, *P, *R);
     }

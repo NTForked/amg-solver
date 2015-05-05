@@ -49,6 +49,7 @@ private:
     size_t nbr_outer_cycle_;
     size_t nbr_prev_;
     size_t nbr_post_;
+    bool use_rb_gs_;
     size_t dim_;
     std::shared_ptr<coarsener> coarsen_;
     std::vector<level> levels_;

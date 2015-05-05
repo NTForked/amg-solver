@@ -2,6 +2,7 @@
   "#levels" : 1,
   "#cycle" : 1,
   "#iteration" : 1,
-  "#prev-smooth" : 3,
-  "#post-smooth" : 3
+  "#prev_smooth" : 3,
+  "#post_smooth" : 3,
+  "red_black_gauss_seidel" : false
 }

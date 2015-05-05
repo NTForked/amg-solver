@@ -1,5 +1,7 @@
 #include "smoother.h"
 
+#include <iostream>
+
 using namespace std;
 using namespace Eigen;
 
@@ -42,6 +44,10 @@ void red_black_gauss_seidel::apply_post_smooth(const spmat_csr &A, const vec &rh
 }
 
 void red_black_gauss_seidel::apply(const spmat_csr &A, const vec &rhs, vec &x, color colour, const vector<bool> *color_tag) const {
+    if ( !color_tag ) {
+        cerr << "error: empty color tag for red black gauss-seidel\n";
+        exit(0);
+    }
 #pragma omp parallel for
     for (size_t i = 0; i < A.rows(); ++i) {
         if ( (*color_tag)[i] != colour )
