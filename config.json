@@ -1,0 +1,7 @@
+{
+  "#levels" : 1,
+  "#cycle" : 1,
+  "#iteration" : 1,
+  "#prev-smooth" : 3,
+  "#post-smooth" : 3
+}

@@ -66,10 +66,11 @@ int amg_solver::compute(const spmat_csr &M) {
     ptr_spmat_csr A = std::make_shared<spmat_csr>(M);
     ptr_spmat_csr P, R;
 
-    for (size_t i = 0; i < nbr_levels_; ++i) {
+    for (size_t i = 0; i < nbr_levels_-1; ++i) {
         std::tie(P, R) = coarsen_->transfer_operator(*A);
         levels_.push_back(level(A, P, R));
-        A = coarsen_->coarse_operator(*A, *P, *R);
+        if ( A.get() && P.get() && R.get() )
+            A = coarsen_->coarse_operator(*A, *P, *R);
     }
     levels_.push_back(level(A));
     return 0;
@@ -115,7 +116,7 @@ void amg_solver::cycle(level_iterator curr, const vec &rhs, vec &x) const {
     ++next;
 
     if ( next == levels_.end() ) {
-        curr->solve_->solve(*next->A_, rhs, x);
+        curr->solve_->solve(*curr->A_, rhs, x);
     } else {
         for (size_t j = 0; j < nbr_inner_cycle_; ++j) {
             for (size_t i = 0; i < nbr_prev_; ++i)
