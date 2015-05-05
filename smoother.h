@@ -1,7 +1,7 @@
 #ifndef AMG_SMOOTHER_H
 #define AMG_SMOOTHER_H
 
-#include "type.h"
+#include "types.h"
 
 namespace amg {
 
