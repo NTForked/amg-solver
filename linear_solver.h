@@ -1,7 +1,7 @@
 #ifndef AMG_LINEAR_SOLVER_H
 #define AMG_LINEAR_SOLVER_H
 
-#include "type.h"
+#include "types.h"
 
 namespace amg {
 

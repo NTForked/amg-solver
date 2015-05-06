@@ -2,7 +2,7 @@
 #define AMG_SOLVER_H
 
 #include <boost/property_tree/ptree.hpp>
-#include "type.h"
+#include "types.h"
 
 namespace amg {
 
@@ -13,6 +13,12 @@ class linear_solver;
 class amg_solver
 {
 public:
+    struct level {
+        ptr_spmat_csr A;
+        ptr_spmat_csr P;
+        ptr_spmat_csr R;
+        std::vector<color> tag_;
+    };
     amg_solver(boost::property_tree::ptree &pt);
     static void tag_red_black(const spmat_csr &A, std::vector<bool> &tag);
 private:

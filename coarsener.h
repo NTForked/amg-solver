@@ -1,7 +1,7 @@
 #ifndef AMG_COARSENER_H
 #define AMG_COARSENER_H
 
-#include "type.h"
+#include "types.h"
 
 namespace amg {
 
@@ -17,7 +17,9 @@ class ruge_stuben : public coarsener
 {
 public:
     transfer_type transfer_operator(const spmat_csr &A);
-    ptr_spmat_csr coarse_operator(const spmat_csr &A, const spmat_csr &R, const spmat_csr &P);
+    ptr_spmat_csr coarse_operator(const spmat_csr &A, const spmat_csr &R, const spmat_csr &P) {
+        return ptr_spmat_csr(new spmat_csr(R*A*P));
+    }
 private:
     void connect();
     void cfsplit();
