@@ -1,0 +1,8 @@
+{
+  "#levels" : 1,
+  "#cycle" : 1,
+  "#iteration" : 1,
+  "#prev_smooth" : 3,
+  "#post_smooth" : 3,
+  "red_black_gauss_seidel" : false
+}

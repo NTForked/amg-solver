@@ -94,6 +94,29 @@ int test_red_black_gs(ptree &pt) {
     return 0;
 }
 
+int test_amg_solver(ptree &pt) {
+    boost::property_tree::ptree prt;
+    boost::property_tree::read_json("../../config.json", prt);
+
+    MatrixXd A = read_matrix("../../spmat.txt");
+    for (size_t i = 0; i < A.rows(); ++i)
+        A(i, i) += 1.0;
+
+    srand(time(NULL));
+    VectorXd rhs = VectorXd::Random(A.cols());
+    cout << rhs.transpose().head(20) << endl << endl;
+
+    SparseMatrix<double, RowMajor> Ar = A.sparseView();
+    VectorXd x;
+    shared_ptr<amg::amg_solver> sol = std::make_shared<amg::amg_solver>(prt);
+    sol->compute(Ar);
+    sol->solve(rhs, x);
+    cout << (Ar*x).transpose().head(20) << endl << endl;
+
+    cout << "done\n";
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     ptree pt;
@@ -101,6 +124,7 @@ int main(int argc, char *argv[])
         zjucad::read_cmdline(argc, argv, pt);
         CALL_SUB_PROG(test_smoother);
         CALL_SUB_PROG(test_red_black_gs);
+        CALL_SUB_PROG(test_amg_solver);
     } catch (const boost::property_tree::ptree_error &e) {
         cerr << "Usage: " << endl;
         zjucad::show_usage_info(std::cerr, pt);
