@@ -42,6 +42,7 @@ amg_solver::amg_solver()
       nbr_prev_(2),
       nbr_post_(2),
       use_rb_gs_(false) {
+    /// init coarsener
     coarsen_ = std::make_shared<ruge_stuben>();
 }
 
@@ -53,11 +54,10 @@ amg_solver::amg_solver(const boost::property_tree::ptree &pt)
     nbr_prev_ = pt_.get<size_t>("#prev_smooth");
     nbr_post_ = pt_.get<size_t>("#post_smooth");
     use_rb_gs_ = pt_.get<bool>("red_black_gauss_seidel");
-    /// alternative according to user's settings
-    coarsen_ = make_shared<ruge_stuben>();
+    /// init coarsener
+    coarsen_ = std::make_shared<ruge_stuben>();
 }
 
-/// build the hierarchy for the system matrix
 int amg_solver::compute(const spmat_csr &M) {
     if ( M.rows() != M.cols() ) {
         cerr << "# error: require a square matrix\n";
@@ -80,8 +80,10 @@ int amg_solver::compute(const spmat_csr &M) {
 
 int amg_solver::solve(const vec &rhs, vec &x) const {
     x.setZero(dim_);
-    for (size_t i = 0; i < nbr_outer_cycle_; ++i)
+    for (size_t i = 0; i < nbr_outer_cycle_; ++i) {
         cycle(levels_.begin(), rhs, x);
+        /// convergence test
+    }
     return 0;
 }
 

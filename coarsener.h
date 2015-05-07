@@ -16,11 +16,17 @@ public:
 class ruge_stuben : public coarsener
 {
 public:
+    ruge_stuben();
+    ruge_stuben(const double eps_strong, const bool do_trunc, const double eps_trunc);
     transfer_type transfer_operator(const spmat_csr &A);
     ptr_spmat_csr coarse_operator(const spmat_csr &A, const spmat_csr &P, const spmat_csr &R);
+    int debug_cfsplit() const;
 private:
-    void connect();
-    void cfsplit();
+    void connect(const spmat_csr &A, spmat_csr_char &S, spmat_csr_char &ST, std::vector<char> &cf_tag);
+    void cfsplit(const spmat_csr &A, const spmat_csr_char &S, const spmat_csr_char &ST, std::vector<char> &cf_tag);
+    const double eps_strong_;
+    const bool do_trunc_;
+    const double eps_trunc_;
 };
 
 class aggregation : public coarsener

@@ -117,6 +117,23 @@ int test_amg_solver(ptree &pt) {
     return 0;
 }
 
+int test_std_algorithm(ptree &pt) {
+    Matrix<char, 10, 1> v;
+    std::fill(v.data(), v.data()+v.size(), 'A');
+    cout << v.transpose() << endl;
+    std::replace(v.data(), v.data()+v.size(), 'A', 'B');
+    cout << v.transpose() << endl;
+
+    vector<size_t> ones{213, 23, 1, 0, 0};
+    std::partial_sum(ones.begin(), ones.end(), ones.begin());
+    for (auto it : ones)
+        cout << it << " ";
+    cout << endl;
+
+    cout << "done\n";
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     ptree pt;
@@ -125,6 +142,7 @@ int main(int argc, char *argv[])
         CALL_SUB_PROG(test_smoother);
         CALL_SUB_PROG(test_red_black_gs);
         CALL_SUB_PROG(test_amg_solver);
+        CALL_SUB_PROG(test_std_algorithm);
     } catch (const boost::property_tree::ptree_error &e) {
         cerr << "Usage: " << endl;
         zjucad::show_usage_info(std::cerr, pt);

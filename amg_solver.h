@@ -23,10 +23,12 @@ public:
         std::shared_ptr<linear_solver> solve_;
         bool is_tag_;
         std::shared_ptr<std::vector<bool>> tag_;
+        /// for fine level
         level(const ptr_spmat_csr &A,
               const ptr_spmat_csr &P,
               const ptr_spmat_csr &R,
               const bool is_tag=false);
+        /// for coarseset level
         level(const ptr_spmat_csr &A);
         size_t dim() const {
             return A_->cols();
