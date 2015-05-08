@@ -8,6 +8,7 @@
 #include "linear_solver.h"
 
 using namespace std;
+using namespace Eigen;
 
 namespace amg {
 
@@ -41,6 +42,7 @@ amg_solver::amg_solver()
       nbr_outer_cycle_(1),
       nbr_prev_(2),
       nbr_post_(2),
+      tolerance_(1e-8),
       use_rb_gs_(false) {
     /// init coarsener
     coarsen_ = std::make_shared<ruge_stuben>();
@@ -54,7 +56,8 @@ amg_solver::amg_solver(const boost::property_tree::ptree &pt)
     nbr_prev_ = pt_.get<size_t>("#prev_smooth");
     nbr_post_ = pt_.get<size_t>("#post_smooth");
     use_rb_gs_ = pt_.get<bool>("red_black_gauss_seidel");
-    /// init coarsener
+    tolerance_ = pt_.get<scalar>("tolerance");
+    ///  init coarsener
     coarsen_ = std::make_shared<ruge_stuben>();
 }
 
@@ -67,24 +70,36 @@ int amg_solver::compute(const spmat_csr &M) {
 
     ptr_spmat_csr A = std::make_shared<spmat_csr>(M);
     ptr_spmat_csr P, R;
-
     for (size_t i = 0; i < nbr_levels_-1; ++i) {
         std::tie(P, R) = coarsen_->transfer_operator(*A);
+        if ( P->cols() == 0 ) {
+            cerr << "# info: zero-sized coarse level, diagonal?\n\n";
+            break;
+        }
         levels_.push_back(level(A, P, R, use_rb_gs_));
-        if ( A.get() && P.get() && R.get() )
-            A = coarsen_->coarse_operator(*A, *P, *R);
+        A = coarsen_->coarse_operator(*A, *P, *R);
     }
     levels_.push_back(level(A));
+    nbr_levels_ = levels_.size();
     return 0;
 }
 
 int amg_solver::solve(const vec &rhs, vec &x) const {
     x.setZero(dim_);
+    vec resd;
     for (size_t i = 0; i < nbr_outer_cycle_; ++i) {
         cycle(levels_.begin(), rhs, x);
-        /// convergence test
+        resd = rhs - (*get_top_matrix())*x;
+        if ( resd.lpNorm<Infinity>() < tolerance_ ) {
+            cout << "# info: converged after " << i+1 << " iterations\n";
+            break;
+        }
     }
     return 0;
+}
+
+ptr_spmat_csr amg_solver::get_top_matrix() const {
+    return levels_[0].A_;
 }
 
 void amg_solver::tag_red_black(const spmat_csr &A, std::vector<bool> &tag) {

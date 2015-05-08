@@ -124,6 +124,7 @@ int test_amg_solver(ptree &pt) {
     boost::property_tree::read_json("../../config.json", prt);    
     srand(time(NULL));
 
+#define READ_MATRIX_FROM_FILE
 #ifdef READ_MATRIX_FROM_FILE
     MatrixXd A = read_matrix("../../spmat.txt");
     for (size_t i = 0; i < A.rows(); ++i)
@@ -131,7 +132,7 @@ int test_amg_solver(ptree &pt) {
 #else
     MatrixXd A = MatrixXd::Random(10000, 10000);
     for (size_t i = 0; i < A.rows(); ++i)
-        A(i, i) += 1.0;
+        A(i, i) += 5.0;
     const size_t sp_ratio = 0.001;
     const size_t zero_count = A.rows()*A.cols()*(1.0-sp_ratio);
     for (size_t cnt = 0; cnt < 5*zero_count; ++cnt) {
