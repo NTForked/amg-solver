@@ -9,7 +9,7 @@ namespace amg {
 //==============================================================================
 void gauss_seidel::apply_prev_smooth(const spmat_csr &A, const vec &rhs, vec &x, const vector<bool> *color_tag) const {
     const size_t row = A.rows();
-    for (int64_t i = 0; i < row; ++i)
+    for (size_t i = 0; i < row; ++i)
         iteration_body(A, rhs, x, i);
 }
 

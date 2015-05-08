@@ -27,7 +27,7 @@ public:
         level(const ptr_spmat_csr &A,
               const ptr_spmat_csr &P,
               const ptr_spmat_csr &R,
-              const bool is_tag=false);
+              const std::string smooth);
         /// for coarseset level
         level(const ptr_spmat_csr &A);
         size_t dim() const {
@@ -53,7 +53,8 @@ private:
     size_t nbr_prev_;
     size_t nbr_post_;
     scalar tolerance_;
-    bool use_rb_gs_;
+    std::string smooth_scheme_;
+    std::string coarsen_scheme_;
     size_t dim_;
     std::shared_ptr<coarsener> coarsen_;
     std::vector<level> levels_;

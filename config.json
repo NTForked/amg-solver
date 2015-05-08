@@ -1,9 +1,10 @@
 {
   "#levels" : 3,
   "#cycle" : 1,
-  "#iteration" : 10,
+  "#iteration" : 20,
   "#prev_smooth" : 3,
   "#post_smooth" : 3,
-  "red_black_gauss_seidel" : false,
+  "smoother" : "gauss_seidel",
+  "coarsener" : "ruge_stuben",
   "tolerance" : 1e-8
 }

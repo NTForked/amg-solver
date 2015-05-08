@@ -15,16 +15,21 @@ namespace amg {
 amg_solver::level::level(const ptr_spmat_csr &A,
                          const ptr_spmat_csr &P,
                          const ptr_spmat_csr &R,
-                         const bool is_tag)
-    : A_(A), P_(P), R_(R), is_tag_(is_tag) {
+                         const string smooth)
+    : A_(A), P_(P), R_(R) {
     f_.reset(new vec(A_->cols()));
     u_.reset(new vec(A_->cols()));
-    if ( is_tag_ ) {
+    if ( smooth == "red_black_gauss_seidel" ) {
         tag_ = std::make_shared<vector<bool>>(A_->cols());
         tag_red_black(*A, *tag_);
         smooth_ = std::make_shared<red_black_gauss_seidel>();
-    } else {
+    } else if ( smooth == "gauss_seidel" ) {
         smooth_ = std::make_shared<gauss_seidel>();
+    } else if ( smooth == "damped_jacobi" ) {
+        smooth_ = std::make_shared<damped_jacobi>();
+    } else {
+        cerr << "# error: no such smooth scheme\n";
+        exit(0);
     }
 }
 
@@ -43,8 +48,9 @@ amg_solver::amg_solver()
       nbr_prev_(2),
       nbr_post_(2),
       tolerance_(1e-8),
-      use_rb_gs_(false) {
-    /// init coarsener
+      smooth_scheme_("gauss_seidel"),
+      coarsen_scheme_("ruge_stuben") {
+    /// init default coarsener
     coarsen_ = std::make_shared<ruge_stuben>();
 }
 
@@ -55,10 +61,16 @@ amg_solver::amg_solver(const boost::property_tree::ptree &pt)
     nbr_outer_cycle_ = pt_.get<size_t>("#iteration");
     nbr_prev_ = pt_.get<size_t>("#prev_smooth");
     nbr_post_ = pt_.get<size_t>("#post_smooth");
-    use_rb_gs_ = pt_.get<bool>("red_black_gauss_seidel");
+    smooth_scheme_ = pt_.get<string>("smoother");
+    coarsen_scheme_ = pt_.get<string>("coarsener");
     tolerance_ = pt_.get<scalar>("tolerance");
     ///  init coarsener
-    coarsen_ = std::make_shared<ruge_stuben>();
+    if ( coarsen_scheme_ == "ruge_stuben" ) {
+        coarsen_ = std::make_shared<ruge_stuben>();
+    } else {
+        cerr << "# error: no such coarsen scheme\n";
+        exit(0);
+    }
 }
 
 int amg_solver::compute(const spmat_csr &M) {
@@ -76,7 +88,7 @@ int amg_solver::compute(const spmat_csr &M) {
             cerr << "# info: zero-sized coarse level, diagonal?\n\n";
             break;
         }
-        levels_.push_back(level(A, P, R, use_rb_gs_));
+        levels_.push_back(level(A, P, R, smooth_scheme_));
         A = coarsen_->coarse_operator(*A, *P, *R);
     }
     levels_.push_back(level(A));
