@@ -106,47 +106,7 @@ void ruge_stuben::cfsplit(const spmat_csr &A,
         ++ptr[lambda[i]+1];
     std::partial_sum(ptr.begin(), ptr.end(), ptr.begin());
 
-    for (size_t i = 0; i < dim; ++i) {
-        size_t col = lambda[i];
-        size_t pos = ptr[col] + cnt[col];
-        ++cnt[col];
-        val[pos] = i;
-        g2l[i] = pos;
-    }
 
-    for (size_t top = dim - 1; top >= 0; --top) {
-        size_t i = val[top];
-        size_t lam = lambda[i];
-
-        if ( lam == 0 ) {
-            std::replace(cf_tag.begin(), cf_tag.end(), 'U', 'C');
-            break;
-        }
-        --cnt[lam];
-
-        if ( cf[i] == 'F' )
-            continue;
-        cf[i] = 'C';
-
-        for (spmat_csr_char::InnerIterator it(ST, i); it; ++it) {
-            size_t id = it.col();
-            if ( cf_tag[id] != 'U' )
-                continue;
-            cf_tag[id] = 'F';
-            for (spmat_csr::InnerIterator its(S, id); its; ++its) {
-                size_t idc = its.col();
-                size_t lamc = lambda[idc];
-
-                // uneccesary to update lambda
-                if ( cf_tag[idc] != 'U' || lamc+1 >= dim )
-                    continue;
-
-                size_t old_pos = g2l[idc];
-                size_t new_pos = ptr[lamc] + cnt[lamc]-1;
-
-            }
-        }
-    }
 }
 
 }

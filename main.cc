@@ -8,6 +8,14 @@
 #include "smoother.h"
 #include "amg_solver.h"
 
+#include "amgcl/amgcl.hpp"
+#include "amgcl/backend/builtin.hpp"
+#include "amgcl/backend/eigen.hpp"
+#include "amgcl/adapter/crs_tuple.hpp"
+#include "amgcl/coarsening/ruge_stuben.hpp"
+#include "amgcl/relaxation/damped_jacobi.hpp"
+#include "amgcl/solver/bicgstab.hpp"
+
 #define CALL_SUB_PROG(prog)                      \
     int prog(ptree &pt);                         \
     if ( pt.get<string>("prog.value") == #prog ) \
@@ -32,19 +40,27 @@ MatrixXd read_matrix(const char *file) {
 
 int test_smoother(ptree &pt) {
     srand(time(NULL));
+
+#ifdef READ_MATRIX_FROM_FILE
     MatrixXd A = read_matrix("../../spmat.txt");
-    // M-matrix
     for (size_t i = 0; i < A.rows(); ++i)
         A(i, i) += 1.0;
-    VectorXd rhs = VectorXd::Random(A.cols());
-    cout << rhs.transpose() << endl << endl;
+#else
+    MatrixXd A = MatrixXd::Random(10000, 10000);
+    for (size_t i = 0; i < A.rows(); ++i)
+        A(i, i) += 5.0;
+    const size_t sp_ratio = 0.001;
+    const size_t zero_count = A.rows()*A.cols()*(1.0-sp_ratio);
+    for (size_t cnt = 0; cnt < 5*zero_count; ++cnt) {
+        size_t I = rand() % 10000;
+        size_t J = rand() % 10000;
+        if ( I != J )
+            A(I, J) = 0;
+    }
+#endif
 
-    SparseMatrix<double, ColMajor> Ac = A.sparseView();
-    VectorXd x = VectorXd::Random(A.cols());
-    UmfPackLU<SparseMatrix<double>> sol;
-    sol.compute(Ac);
-    x = sol.solve(rhs);
-    cout << (Ac*x).transpose() << endl << endl;
+    VectorXd rhs = VectorXd::Random(A.cols());
+    cout << rhs.transpose().head(20) << endl << endl;
 
     SparseMatrix<double, RowMajor> Ar = A.sparseView();
     VectorXd y = VectorXd::Random(A.cols());
@@ -56,7 +72,7 @@ int test_smoother(ptree &pt) {
 #endif
     for (size_t i = 0; i < 10000; ++i)
         smooth->apply_prev_smooth(Ar, rhs, y, nullptr);
-    cout << (Ar*y).transpose() << endl << endl;
+    cout << (Ar*y).transpose().head(20) << endl << endl;
 
     cout << "done\n";
     return 0;
@@ -64,18 +80,27 @@ int test_smoother(ptree &pt) {
 
 int test_red_black_gs(ptree &pt) {
     srand(time(NULL));
+
+#ifdef READ_MATRIX_FROM_FILE
     MatrixXd A = read_matrix("../../spmat.txt");
     for (size_t i = 0; i < A.rows(); ++i)
         A(i, i) += 1.0;
-    VectorXd rhs = VectorXd::Random(A.cols());
-    cout << rhs.transpose() << endl << endl;
+#else
+    MatrixXd A = MatrixXd::Random(10000, 10000);
+    for (size_t i = 0; i < A.rows(); ++i)
+        A(i, i) += 5.0;
+    const size_t sp_ratio = 0.001;
+    const size_t zero_count = A.rows()*A.cols()*(1.0-sp_ratio);
+    for (size_t cnt = 0; cnt < 5*zero_count; ++cnt) {
+        size_t I = rand() % 10000;
+        size_t J = rand() % 10000;
+        if ( I != J )
+            A(I, J) = 0;
+    }
+#endif
 
-    SparseMatrix<double, ColMajor> Ac = A.sparseView();
-    VectorXd x = VectorXd::Random(A.cols());
-    UmfPackLU<SparseMatrix<double>> sol;
-    sol.compute(Ac);
-    x = sol.solve(rhs);
-    cout << (Ac*x).transpose() << endl << endl;
+    VectorXd rhs = VectorXd::Random(A.cols());
+    cout << rhs.transpose().head(20) << endl << endl;
 
     SparseMatrix<double, RowMajor> Ar = A.sparseView();
     VectorXd y = VectorXd::Random(A.cols());
@@ -88,7 +113,7 @@ int test_red_black_gs(ptree &pt) {
     shared_ptr<amg::smoother> smooth(new amg::red_black_gauss_seidel);
     for (size_t cnt = 0; cnt < 10000; ++cnt)
         smooth->apply_prev_smooth(Ar, rhs, y, &tag);
-    cout << (Ar*y).transpose() << endl << endl;
+    cout << (Ar*y).transpose().head(20) << endl << endl;
 
     cout << "done\n";
     return 0;
@@ -96,13 +121,27 @@ int test_red_black_gs(ptree &pt) {
 
 int test_amg_solver(ptree &pt) {
     boost::property_tree::ptree prt;
-    boost::property_tree::read_json("../../config.json", prt);
+    boost::property_tree::read_json("../../config.json", prt);    
+    srand(time(NULL));
 
+#ifdef READ_MATRIX_FROM_FILE
     MatrixXd A = read_matrix("../../spmat.txt");
     for (size_t i = 0; i < A.rows(); ++i)
         A(i, i) += 1.0;
+#else
+    MatrixXd A = MatrixXd::Random(10000, 10000);
+    for (size_t i = 0; i < A.rows(); ++i)
+        A(i, i) += 1.0;
+    const size_t sp_ratio = 0.001;
+    const size_t zero_count = A.rows()*A.cols()*(1.0-sp_ratio);
+    for (size_t cnt = 0; cnt < 5*zero_count; ++cnt) {
+        size_t I = rand() % 10000;
+        size_t J = rand() % 10000;
+        if ( I != J )
+            A(I, J) = 0;
+    }
+#endif
 
-    srand(time(NULL));
     VectorXd rhs = VectorXd::Random(A.cols());
     cout << rhs.transpose().head(20) << endl << endl;
 
@@ -134,6 +173,65 @@ int test_std_algorithm(ptree &pt) {
     return 0;
 }
 
+int test_amgcl(ptree &pt) {
+    srand(time(NULL));
+    MatrixXd A = MatrixXd::Random(10000, 10000);
+    for (size_t i = 0; i < A.rows(); ++i)
+        A(i, i) += 5.0;
+
+    const size_t sp_ratio = 0.001;
+    const size_t zero_count = A.rows()*A.cols()*(1.0-sp_ratio);
+    for (size_t cnt = 0; cnt < 5*zero_count; ++cnt) {
+        size_t I = rand() % 10000;
+        size_t J = rand() % 10000;
+        if ( I != J )
+            A(I, J) = 0;
+    }
+
+    VectorXd rhs0 = VectorXd::Random(A.cols());
+    cout << rhs0.transpose().head(20) << endl << endl;
+
+    SparseMatrix<double, RowMajor> Ar = A.sparseView();
+    cout << ((double)Ar.nonZeros())/A.cols()/A.rows() << endl;
+    Ar.makeCompressed();
+
+    int n = Ar.rows();
+    int nnz = Ar.nonZeros();
+    std::vector<double> val(Ar.valuePtr(), Ar.valuePtr()+nnz);
+    std::vector<int>    col(Ar.innerIndexPtr(), Ar.innerIndexPtr()+nnz);
+    std::vector<int>    ptr(Ar.outerIndexPtr(), Ar.outerIndexPtr()+n+1);
+    std::vector<double> rhs(rhs0.data(), rhs0.data()+n);
+
+    typedef amgcl::amg<
+            amgcl::backend::builtin<double>,
+            amgcl::coarsening::ruge_stuben,
+            amgcl::relaxation::damped_jacobi
+            > AMG;
+
+    AMG amg(boost::tie(n, ptr, col, val));
+    std::cout << amg << std::endl;
+
+    typedef amgcl::solver::bicgstab<amgcl::backend::builtin<double>> Solver;
+
+    Solver solve(n);
+
+    std::vector<double> x(n, 0);
+
+    int    iters;
+    double resid;
+    boost::tie(iters, resid) = solve(amg, rhs, x);
+
+    std::cout << "Iterations: " << iters << std::endl
+              << "Error:      " << resid << std::endl
+              << std::endl;
+
+    Map<const VectorXd> X(&x[0], x.size());
+    VectorXd RHS = Ar * X;
+    cout << RHS.transpose().head(20) << endl;
+
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     ptree pt;
@@ -143,6 +241,7 @@ int main(int argc, char *argv[])
         CALL_SUB_PROG(test_red_black_gs);
         CALL_SUB_PROG(test_amg_solver);
         CALL_SUB_PROG(test_std_algorithm);
+        CALL_SUB_PROG(test_amgcl);
     } catch (const boost::property_tree::ptree_error &e) {
         cerr << "Usage: " << endl;
         zjucad::show_usage_info(std::cerr, pt);
