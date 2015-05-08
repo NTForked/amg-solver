@@ -197,7 +197,7 @@ void ruge_stuben::cfsplit(const spmat_csr &A,
         s2g[idx] = i;
     }
 
-    for (int64_t top = dim-1; top >= 0; --top) {
+    for (size_t top = dim; top-- > 0;) {
         size_t i = s2g[top];
         size_t lam = lambda[i];
         if ( lam == 0 ) {

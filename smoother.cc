@@ -15,7 +15,7 @@ void gauss_seidel::apply_prev_smooth(const spmat_csr &A, const vec &rhs, vec &x,
 
 void gauss_seidel::apply_post_smooth(const spmat_csr &A, const vec &rhs, vec &x, const vector<bool> *color_tag) const {
     const size_t row = A.rows();
-    for (int64_t i = row-1; i >= 0; --i)
+    for (size_t i = row; i-- > 0;)
         iteration_body(A, rhs, x, i);
 }
 
