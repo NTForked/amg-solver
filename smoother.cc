@@ -81,6 +81,7 @@ void damped_jacobi::apply_post_smooth(const spmat_csr &A, const vec &rhs, vec &x
 void damped_jacobi::apply(const spmat_csr &A, const vec &rhs, vec &x) const {
     const size_t row = A.rows();
     vec xtemp(x.rows());
+#pragma omp parallel for
     for (size_t i = 0; i < row; ++i) {
         scalar diag = 1.0;
         scalar temp = rhs[i];
