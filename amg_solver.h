@@ -21,15 +21,13 @@ public:
         ptr_vec u_;
         std::shared_ptr<smoother> smooth_;
         std::shared_ptr<linear_solver> solve_;
-        bool is_tag_;
         std::shared_ptr<std::vector<bool>> tag_;
-        /// for fine level
         level(const ptr_spmat_csr &A,
               const ptr_spmat_csr &P,
               const ptr_spmat_csr &R,
-              const std::string smooth);
-        /// for coarseset level
-        level(const ptr_spmat_csr &A);
+              const std::string &relax_type);
+        level(const ptr_spmat_csr &A,
+              const std::string &lin_sol_type);
         size_t dim() const {
             return A_->cols();
         }
@@ -55,6 +53,7 @@ private:
     scalar tolerance_;
     std::string smooth_scheme_;
     std::string coarsen_scheme_;
+    std::string linear_solver_;
     size_t dim_;
     std::shared_ptr<coarsener> coarsen_;
     std::vector<level> levels_;

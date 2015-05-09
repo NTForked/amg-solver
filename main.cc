@@ -130,14 +130,15 @@ int test_amg_solver(ptree &pt) {
     for (size_t i = 0; i < A.rows(); ++i)
         A(i, i) += 1.0;
 #else
-    MatrixXd A = MatrixXd::Random(10000, 10000);
+    const size_t size = 15000;
+    MatrixXd A = MatrixXd::Random(size, size);
     for (size_t i = 0; i < A.rows(); ++i)
         A(i, i) += 5.0;
     const size_t sp_ratio = 0.001;
     const size_t zero_count = A.rows()*A.cols()*(1.0-sp_ratio);
     for (size_t cnt = 0; cnt < 5*zero_count; ++cnt) {
-        size_t I = rand() % 10000;
-        size_t J = rand() % 10000;
+        size_t I = rand() % size;
+        size_t J = rand() % size;
         if ( I != J )
             A(I, J) = 0;
     }
@@ -149,9 +150,17 @@ int test_amg_solver(ptree &pt) {
     SparseMatrix<double, RowMajor> Ar = A.sparseView();
     VectorXd x;
     shared_ptr<amg::amg_solver> sol = std::make_shared<amg::amg_solver>(prt);
+    cout << "# info: AMG compute\n";
     sol->compute(Ar);
+    cout << "# info: AMG solve\n";
     sol->solve(rhs, x);
     cout << (Ar*x).transpose().head(20) << endl << endl;
+
+    shared_ptr<amg::smoother> smooth(new amg::gauss_seidel);
+    VectorXd y = VectorXd::Zero(A.cols());
+    for (size_t i = 0; i < 6; ++i)
+        smooth->apply_prev_smooth(Ar, rhs, y, nullptr);
+    cout << (Ar*y).transpose().head(20) << endl << endl;
 
     cout << "done\n";
     return 0;

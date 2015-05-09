@@ -12,20 +12,22 @@ using namespace Eigen;
 
 namespace amg {
 
+///> for the finer levels
 amg_solver::level::level(const ptr_spmat_csr &A,
                          const ptr_spmat_csr &P,
                          const ptr_spmat_csr &R,
-                         const string smooth)
+                         const string &relax_type)
     : A_(A), P_(P), R_(R) {
     f_.reset(new vec(A_->cols()));
     u_.reset(new vec(A_->cols()));
-    if ( smooth == "red_black_gauss_seidel" ) {
+
+    if ( relax_type == "red_black_gauss_seidel" ) {
         tag_ = std::make_shared<vector<bool>>(A_->cols());
         tag_red_black(*A, *tag_);
         smooth_ = std::make_shared<red_black_gauss_seidel>();
-    } else if ( smooth == "gauss_seidel" ) {
+    } else if ( relax_type == "gauss_seidel" ) {
         smooth_ = std::make_shared<gauss_seidel>();
-    } else if ( smooth == "damped_jacobi" ) {
+    } else if ( relax_type == "damped_jacobi" ) {
         smooth_ = std::make_shared<damped_jacobi>();
     } else {
         cerr << "# error: no such smooth scheme\n";
@@ -33,11 +35,20 @@ amg_solver::level::level(const ptr_spmat_csr &A,
     }
 }
 
-amg_solver::level::level(const ptr_spmat_csr &A)
+///> for the coarsest level
+amg_solver::level::level(const ptr_spmat_csr &A, const string &lin_sol_type)
     : A_(A)  {
     f_ = std::make_shared<vec>(A_->cols());
     u_ = std::make_shared<vec>(A_->cols());
-    solve_ = std::make_shared<eigen_lu_solver>();
+
+    if ( lin_sol_type == "LU" ) {
+        solve_ = std::make_shared<eigen_lu_solver>();
+    } else if ( lin_sol_type == "LTL" ) {
+        solve_ = std::make_shared<eigen_cholesky_solver>();
+    } else {
+        cerr << "# error: no such linear solver\n";
+        exit(0);
+    }
 }
 
 amg_solver::amg_solver()
@@ -49,21 +60,24 @@ amg_solver::amg_solver()
       nbr_post_(2),
       tolerance_(1e-8),
       smooth_scheme_("gauss_seidel"),
-      coarsen_scheme_("ruge_stuben") {
+      coarsen_scheme_("ruge_stuben"),
+      linear_solver_("LU") {
     /// init default coarsener
     coarsen_ = std::make_shared<ruge_stuben>();
 }
 
 amg_solver::amg_solver(const boost::property_tree::ptree &pt)
     : pt_(pt) {
-    nbr_levels_ = pt_.get<size_t>("#levels");
+    nbr_levels_      = pt_.get<size_t>("#levels");
     nbr_inner_cycle_ = pt_.get<size_t>("#cycle");
     nbr_outer_cycle_ = pt_.get<size_t>("#iteration");
-    nbr_prev_ = pt_.get<size_t>("#prev_smooth");
-    nbr_post_ = pt_.get<size_t>("#post_smooth");
-    smooth_scheme_ = pt_.get<string>("smoother");
-    coarsen_scheme_ = pt_.get<string>("coarsener");
-    tolerance_ = pt_.get<scalar>("tolerance");
+    nbr_prev_        = pt_.get<size_t>("#prev_smooth");
+    nbr_post_        = pt_.get<size_t>("#post_smooth");
+    smooth_scheme_   = pt_.get<string>("smoother");
+    coarsen_scheme_  = pt_.get<string>("coarsener");
+    linear_solver_   = pt_.get<string>("linear_solver");
+    tolerance_       = pt_.get<scalar>("tolerance");
+
     ///  init coarsener
     if ( coarsen_scheme_ == "ruge_stuben" ) {
         coarsen_ = std::make_shared<ruge_stuben>();
@@ -91,7 +105,7 @@ int amg_solver::compute(const spmat_csr &M) {
         levels_.push_back(level(A, P, R, smooth_scheme_));
         A = coarsen_->coarse_operator(*A, *P, *R);
     }
-    levels_.push_back(level(A));
+    levels_.push_back(level(A, linear_solver_));
     nbr_levels_ = levels_.size();
     return 0;
 }
