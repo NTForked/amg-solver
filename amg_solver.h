@@ -44,6 +44,7 @@ public:
     static void tag_red_black(const spmat_csr &A, std::vector<bool> &tag);
 private:
     void cycle(level_iterator curr, const vec &rhs, vec &x) const;
+    void full_multigrid_cycle(level_iterator curr, const vec &rhs, vec &x) const;
     const boost::property_tree::ptree &pt_;
     size_t nbr_levels_;
     size_t nbr_inner_cycle_;

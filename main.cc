@@ -130,6 +130,7 @@ int test_amg_solver(ptree &pt) {
     for (size_t i = 0; i < A.rows(); ++i)
         A(i, i) += 1.0;
 #else
+    cout << "# info: construct system matrix\n";
     const size_t size = 15000;
     MatrixXd A = MatrixXd::Random(size, size);
     for (size_t i = 0; i < A.rows(); ++i)
@@ -156,11 +157,11 @@ int test_amg_solver(ptree &pt) {
     sol->solve(rhs, x);
     cout << (Ar*x).transpose().head(20) << endl << endl;
 
-    shared_ptr<amg::smoother> smooth(new amg::gauss_seidel);
-    VectorXd y = VectorXd::Zero(A.cols());
-    for (size_t i = 0; i < 6; ++i)
-        smooth->apply_prev_smooth(Ar, rhs, y, nullptr);
-    cout << (Ar*y).transpose().head(20) << endl << endl;
+//    shared_ptr<amg::smoother> smooth(new amg::gauss_seidel);
+//    VectorXd y = VectorXd::Zero(A.cols());
+//    for (size_t i = 0; i < 6; ++i)
+//        smooth->apply_prev_smooth(Ar, rhs, y, nullptr);
+//    cout << (Ar*y).transpose().head(20) << endl << endl;
 
     cout << "done\n";
     return 0;

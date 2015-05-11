@@ -114,7 +114,7 @@ int amg_solver::solve(const vec &rhs, vec &x) const {
     x.setZero(dim_);
     vec resd;
     for (size_t i = 0; i < nbr_outer_cycle_; ++i) {
-        cycle(levels_.begin(), rhs, x);
+        full_multigrid_cycle(levels_.begin(), rhs, x);
         resd = rhs - (*get_top_matrix())*x;
         if ( resd.lpNorm<Infinity>() < tolerance_ ) {
             cout << "# info: converged after " << i+1 << " iterations\n";
@@ -179,6 +179,21 @@ void amg_solver::cycle(level_iterator curr, const vec &rhs, vec &x) const {
                 curr->smooth_->apply_post_smooth(*curr->A_, rhs, x, curr->tag_.get());
         }
     }
+}
+
+void amg_solver::full_multigrid_cycle(level_iterator curr, const vec &rhs, vec &x) const {
+    level_iterator next = curr;
+    ++next;
+
+    if ( next == levels_.end() ) {
+        x.setZero();
+        goto vcycle;
+    } else {
+        *next->f_ = (*curr->R_)*rhs;
+        full_multigrid_cycle(next, *next->f_, *next->u_);
+    }
+    x = (*curr->P_)*(*next->u_);
+    vcycle: cycle(curr, rhs, x);
 }
 
 }
