@@ -42,12 +42,13 @@ transfer_type ruge_stuben::transfer_operator(const spmat_csr &A) {
             g2l[i] = dim_c++;
 
     vector<scalar> Amin, Amax;
-    vector<Triplet<scalar>> trips;
     if ( do_trunc_ ) {
         Amin.resize(dim);
         Amax.resize(dim);
 #pragma omp parallel for
         for (size_t i = 0; i < dim; ++i) {
+            if ( cf_tag[i] == 'C' )
+                continue;
             scalar amin = 0, amax = 0;
             for (spmat_csr::InnerIterator it(A, i); it; ++it) {
                 if ( !S.coeff(it.row(), it.col()) || cf_tag[it.col()] != 'C' )
@@ -56,10 +57,11 @@ transfer_type ruge_stuben::transfer_operator(const spmat_csr &A) {
                 amax = std::max(amax, it.value());
             }
             Amin[i] = (amin *= eps_trunc_);
-            Amax[i] = (amin *= eps_trunc_);
+            Amax[i] = (amax *= eps_trunc_);
         }
     }
 
+    vector<Triplet<scalar>> trips;
     for (size_t i = 0; i < dim; ++i) {
         if ( cf_tag[i] == 'C' ) {
             trips.push_back(Triplet<scalar>(i, g2l[i], 1.0));
@@ -100,7 +102,7 @@ transfer_type ruge_stuben::transfer_operator(const spmat_csr &A) {
             if ( std::fabs(b_den - d_pos) > eps )
                 cf_pos = b_den / (b_den - d_pos);
         }
-        if ( b_num > 0 && fabs(b_den) < eps)
+        if ( b_num > 0 && std::fabs(b_den) < eps)
             dia += b_num;
 
         scalar alpha = fabs(a_den) > eps ? -cf_neg * a_num / (dia * a_den) : 0;
@@ -114,7 +116,7 @@ transfer_type ruge_stuben::transfer_operator(const spmat_csr &A) {
             if ( do_trunc_ && v > Amin[i] && v < Amax[i] )
                 continue;
             scalar val = (v < 0 ? alpha : beta ) * v;
-            trips.push_back(Triplet<scalar>(i, g2l[i], val));
+            trips.push_back(Triplet<scalar>(i, g2l[c], val));
         }
     }
 

@@ -131,7 +131,7 @@ int test_amg_solver(ptree &pt) {
         A(i, i) += 1.0;
 #else
     cout << "# info: construct system matrix\n";
-    const size_t size = 9528;
+    const size_t size = 8647;
     MatrixXd A = MatrixXd::Random(size, size);
     for (size_t i = 0; i < A.rows(); ++i)
         A(i, i) += 5.0;
@@ -182,7 +182,7 @@ int test_std_algorithm(ptree &pt) {
 
 int test_amgcl(ptree &pt) {
     srand(0);
-    const size_t size = 9528;
+    const size_t size = 8647;
     MatrixXd A = MatrixXd::Random(size, size);
     for (size_t i = 0; i < A.rows(); ++i)
         A(i, i) += 5.0;
