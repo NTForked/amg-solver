@@ -101,11 +101,6 @@ int amg_solver::compute(const spmat_csr &M) {
 
     ptr_spmat_csr A = std::make_shared<spmat_csr>(M);
     ptr_spmat_csr P, R;
-//    for (spmat_csr::InnerIterator it(*A, 0); it; ++it) {
-//        cout << it.value() << " ";
-//    }
-//    cout << endl;
-
     for (size_t i = 0; i < nbr_levels_-1; ++i) {
         std::tie(P, R) = coarsen_->transfer_operator(*A);
         if ( P->cols() == 0 ) {
@@ -130,7 +125,7 @@ int amg_solver::solve(const vec &rhs, vec &x) const {
     x.setZero(dim_);
     vec resd;
     for (size_t i = 0; i < nbr_outer_cycle_; ++i) {
-        full_multigrid_cycle(levels_.begin(), rhs, x);
+        cycle(levels_.begin(), rhs, x);
         resd = rhs - (*get_top_matrix())*x;
         if ( resd.lpNorm<Infinity>() < tolerance_ ) {
             cout << "# info: converged after " << i+1 << " iterations\n";
@@ -182,7 +177,7 @@ void amg_solver::cycle(level_iterator curr, const vec &rhs, vec &x) const {
         for (size_t j = 0; j < nbr_inner_cycle_; ++j) {
             for (size_t i = 0; i < nbr_prev_; ++i)
                 curr->smooth_->apply_prev_smooth(*curr->A_, rhs, x, curr->tag_.get());
-            cout << "XXXXX: " << x[0] << endl;
+
             vec residual = rhs - *curr->A_ * x;
             *next->f_ = *curr->R_ * residual;
 

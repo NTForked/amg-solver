@@ -4,6 +4,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <zjucad/ptree/ptree.h>
 #include <Eigen/UmfPackSupport>
+#include <hjlib/util/hrclock.h>
 
 #include "smoother.h"
 #include "amg_solver.h"
@@ -155,10 +156,12 @@ int test_amg_solver(ptree &pt) {
     cout << "# info: AMG compute\n";
     sol->compute(Ar);
     cout << "# info: AMG solve\n";
+    hj::util::high_resolution_clock clk;
+    const double start = clk.ms();
     sol->solve(rhs, x);
+    const double end = clk.ms();
+    cout << "# time: " << end - start << endl;
     cout << (Ar*x).transpose().segment<20>(1000) << endl << endl;
-
-    cout << "error: " << (rhs-Ar*x).lpNorm<Infinity>() << endl;
 
     cout << "done\n";
     return 0;
