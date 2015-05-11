@@ -1,10 +1,10 @@
 {
   "#levels" : 3,
   "#cycle" : 1,
-  "#iteration" : 2,
+  "#iteration" : 20,
   "#prev_smooth" : 3,
   "#post_smooth" : 3,
-  "smoother" : "gauss_seidel",
+  "smoother" : "damped_jacobi",
   "coarsener" : "ruge_stuben",
   "linear_solver" : "LU",
   "tolerance" : 1e-8

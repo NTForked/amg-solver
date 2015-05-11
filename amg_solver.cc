@@ -85,6 +85,11 @@ amg_solver::amg_solver(const boost::property_tree::ptree &pt)
         cerr << "# error: no such coarsen scheme\n";
         exit(0);
     }
+    cout << "\n-----------------------------------------------\n";
+    cout << "smoother: " << smooth_scheme_ << endl;
+    cout << "coarsener: " << coarsen_scheme_ << endl;
+    cout << "direct solver: " << linear_solver_ << endl;
+    cout << "-----------------------------------------------\n\n";
 }
 
 int amg_solver::compute(const spmat_csr &M) {

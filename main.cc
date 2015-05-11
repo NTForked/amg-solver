@@ -146,7 +146,8 @@ int test_amg_solver(ptree &pt) {
 #endif
 
     VectorXd rhs = VectorXd::Random(A.cols());
-    cout << rhs.transpose().head(20) << endl << endl;
+//    cout << rhs.transpose().head(20) << endl << endl;
+    cout << rhs.transpose().segment<20>(1000) << endl << endl;
 
     SparseMatrix<double, RowMajor> Ar = A.sparseView();
     VectorXd x;
@@ -155,8 +156,10 @@ int test_amg_solver(ptree &pt) {
     sol->compute(Ar);
     cout << "# info: AMG solve\n";
     sol->solve(rhs, x);
-    cout << (Ar*x).transpose().head(20) << endl << endl;
+//    cout << (Ar*x).transpose().head(20) << endl << endl;
+    cout << (Ar*x).transpose().segment<20>(1000) << endl << endl;
 
+    cout << "error: " << (rhs-Ar*x).lpNorm<Infinity>() << endl;
 //    shared_ptr<amg::smoother> smooth(new amg::gauss_seidel);
 //    VectorXd y = VectorXd::Zero(A.cols());
 //    for (size_t i = 0; i < 6; ++i)
