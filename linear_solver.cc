@@ -9,7 +9,6 @@ using namespace Eigen;
 namespace amg {
 
 int eigen_cholesky_solver::solve(const spmat_csc &A, const vec &rhs, vec &x) const {
-    cout << "\t@this is " << name() << "\n";
     SimplicialCholesky<spmat_csc> solver;
     solver.compute(A);
     if ( solver.info() != Success ) {
@@ -25,7 +24,6 @@ int eigen_cholesky_solver::solve(const spmat_csc &A, const vec &rhs, vec &x) con
 }
 
 int eigen_lu_solver::solve(const spmat_csc &A, const vec &rhs, vec &x) const {
-    cout << "\t@this is " << name() << "\n";
     UmfPackLU<spmat_csc> solver;
     solver.compute(A);
     if ( solver.info() != Success ) {

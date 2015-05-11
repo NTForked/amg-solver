@@ -1,7 +1,7 @@
 {
-  "#levels" : 3,
+  "#levels" : 2,
   "#cycle" : 1,
-  "#iteration" : 20,
+  "#iteration" : 100,
   "#prev_smooth" : 3,
   "#post_smooth" : 3,
   "smoother" : "damped_jacobi",

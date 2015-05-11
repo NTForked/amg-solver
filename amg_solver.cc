@@ -112,6 +112,12 @@ int amg_solver::compute(const spmat_csr &M) {
     }
     levels_.push_back(level(A, linear_solver_));
     nbr_levels_ = levels_.size();
+
+    cout << "\n-----------------------------------------------\n";
+    for (size_t i = 0; i < levels_.size(); ++i) {
+        printf("level %zu: %zu\n", i, levels_[i].dim());
+    }
+    cout << "-----------------------------------------------\n\n";
     return 0;
 }
 

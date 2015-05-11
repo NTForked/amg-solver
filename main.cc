@@ -122,7 +122,7 @@ int test_red_black_gs(ptree &pt) {
 int test_amg_solver(ptree &pt) {
     boost::property_tree::ptree prt;
     boost::property_tree::read_json("../../config.json", prt);    
-    srand(time(NULL));
+    srand(0);
 
 #define READ_MATRIX_FROM_FILE 0
 #if READ_MATRIX_FROM_FILE
@@ -131,7 +131,7 @@ int test_amg_solver(ptree &pt) {
         A(i, i) += 1.0;
 #else
     cout << "# info: construct system matrix\n";
-    const size_t size = 15000;
+    const size_t size = 10000;
     MatrixXd A = MatrixXd::Random(size, size);
     for (size_t i = 0; i < A.rows(); ++i)
         A(i, i) += 5.0;
@@ -146,7 +146,6 @@ int test_amg_solver(ptree &pt) {
 #endif
 
     VectorXd rhs = VectorXd::Random(A.cols());
-//    cout << rhs.transpose().head(20) << endl << endl;
     cout << rhs.transpose().segment<20>(1000) << endl << endl;
 
     SparseMatrix<double, RowMajor> Ar = A.sparseView();
@@ -156,15 +155,9 @@ int test_amg_solver(ptree &pt) {
     sol->compute(Ar);
     cout << "# info: AMG solve\n";
     sol->solve(rhs, x);
-//    cout << (Ar*x).transpose().head(20) << endl << endl;
     cout << (Ar*x).transpose().segment<20>(1000) << endl << endl;
 
     cout << "error: " << (rhs-Ar*x).lpNorm<Infinity>() << endl;
-//    shared_ptr<amg::smoother> smooth(new amg::gauss_seidel);
-//    VectorXd y = VectorXd::Zero(A.cols());
-//    for (size_t i = 0; i < 6; ++i)
-//        smooth->apply_prev_smooth(Ar, rhs, y, nullptr);
-//    cout << (Ar*y).transpose().head(20) << endl << endl;
 
     cout << "done\n";
     return 0;
@@ -188,22 +181,23 @@ int test_std_algorithm(ptree &pt) {
 }
 
 int test_amgcl(ptree &pt) {
-    srand(time(NULL));
-    MatrixXd A = MatrixXd::Random(10000, 10000);
+    srand(0);
+    const size_t size = 10000;
+    MatrixXd A = MatrixXd::Random(size, size);
     for (size_t i = 0; i < A.rows(); ++i)
         A(i, i) += 5.0;
 
     const size_t sp_ratio = 0.001;
     const size_t zero_count = A.rows()*A.cols()*(1.0-sp_ratio);
     for (size_t cnt = 0; cnt < 5*zero_count; ++cnt) {
-        size_t I = rand() % 10000;
-        size_t J = rand() % 10000;
+        size_t I = rand() % size;
+        size_t J = rand() % size;
         if ( I != J )
             A(I, J) = 0;
     }
 
     VectorXd rhs0 = VectorXd::Random(A.cols());
-    cout << rhs0.transpose().head(20) << endl << endl;
+    cout << rhs0.transpose().segment<20>(1000) << endl << endl;
 
     SparseMatrix<double, RowMajor> Ar = A.sparseView();
     cout << ((double)Ar.nonZeros())/A.cols()/A.rows() << endl;
@@ -241,7 +235,7 @@ int test_amgcl(ptree &pt) {
 
     Map<const VectorXd> X(&x[0], x.size());
     VectorXd RHS = Ar * X;
-    cout << RHS.transpose().head(20) << endl;
+    cout << RHS.transpose().segment<20>(1000) << endl;
 
     return 0;
 }
