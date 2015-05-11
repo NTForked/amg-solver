@@ -115,7 +115,7 @@ int amg_solver::compute(const spmat_csr &M) {
 
     cout << "\n-----------------------------------------------\n";
     for (size_t i = 0; i < levels_.size(); ++i) {
-        printf("level %zu: %zu\n", i, levels_[i].dim());
+        printf("level %zu\tdim: %zu\tnonzeros: %d\n", i, levels_[i].dim(), levels_[i].A_->nonZeros());
     }
     cout << "-----------------------------------------------\n\n";
     return 0;
