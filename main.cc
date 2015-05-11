@@ -14,6 +14,7 @@
 #include "amgcl/adapter/crs_tuple.hpp"
 #include "amgcl/coarsening/ruge_stuben.hpp"
 #include "amgcl/relaxation/damped_jacobi.hpp"
+#include "amgcl/relaxation/gauss_seidel.hpp"
 #include "amgcl/solver/bicgstab.hpp"
 
 #define CALL_SUB_PROG(prog)                      \
@@ -213,25 +214,14 @@ int test_amgcl(ptree &pt) {
     typedef amgcl::amg<
             amgcl::backend::builtin<double>,
             amgcl::coarsening::ruge_stuben,
-            amgcl::relaxation::damped_jacobi
+            amgcl::relaxation::gauss_seidel
             > AMG;
 
     AMG amg(boost::tie(n, ptr, col, val));
     std::cout << amg << std::endl;
 
-    typedef amgcl::solver::bicgstab<amgcl::backend::builtin<double>> Solver;
-
-    Solver solve(n);
-
     std::vector<double> x(n, 0);
-
-    int    iters;
-    double resid;
-    boost::tie(iters, resid) = solve(amg, rhs, x);
-
-    std::cout << "Iterations: " << iters << std::endl
-              << "Error:      " << resid << std::endl
-              << std::endl;
+    amg.apply(rhs, x);
 
     Map<const VectorXd> X(&x[0], x.size());
     VectorXd RHS = Ar * X;
