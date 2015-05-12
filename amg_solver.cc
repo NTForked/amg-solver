@@ -58,6 +58,7 @@ amg_solver::amg_solver()
       nbr_outer_cycle_(1),
       nbr_prev_(2),
       nbr_post_(2),
+      nbr_fmg_iter_(1),
       tolerance_(1e-8),
       smooth_scheme_("gauss_seidel"),
       coarsen_scheme_("ruge_stuben"),
@@ -73,6 +74,7 @@ amg_solver::amg_solver(const boost::property_tree::ptree &pt)
     nbr_outer_cycle_ = pt_.get<size_t>("#iteration");
     nbr_prev_        = pt_.get<size_t>("#prev_smooth");
     nbr_post_        = pt_.get<size_t>("#post_smooth");
+    nbr_fmg_iter_    = pt_.get<size_t>("#FMG_inner_iteration");
     smooth_scheme_   = pt_.get<string>("smoother");
     coarsen_scheme_  = pt_.get<string>("coarsener");
     linear_solver_   = pt_.get<string>("linear_solver");
@@ -132,6 +134,15 @@ int amg_solver::solve(const vec &rhs, vec &x) const {
             break;
         }
     }
+    cout << "# info: residual infinity norm: " << resd.norm() << "\n";
+    return 0;
+}
+
+int amg_solver::solveFMG(const vec &rhs, vec &x) const {
+    x.setZero(dim_);
+    full_multigrid_cycle(levels_.begin(), rhs, x);
+    vec resd = rhs - (*get_top_matrix())*x;
+    cout << "# info: residual infinity norm: " << resd.norm() << "\n";
     return 0;
 }
 
@@ -197,14 +208,15 @@ void amg_solver::full_multigrid_cycle(level_iterator curr, const vec &rhs, vec &
     ++next;
 
     if ( next == levels_.end() ) {
-        x.setZero();
-        goto vcycle;
+        curr->solve_->solve(*curr->A_, rhs, x);
+        return;
     } else {
         *next->f_ = (*curr->R_)*rhs;
         full_multigrid_cycle(next, *next->f_, *next->u_);
     }
     x = (*curr->P_)*(*next->u_);
-    vcycle: cycle(curr, rhs, x);
+    for (size_t iter = 0; iter < nbr_fmg_iter_; ++iter)
+        cycle(curr, rhs, x);
 }
 
 }

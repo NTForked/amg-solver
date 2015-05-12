@@ -124,7 +124,7 @@ int test_red_black_gs(ptree &pt) {
 int test_amg_solver(ptree &pt) {
     boost::property_tree::ptree prt;
     boost::property_tree::read_json("../../config.json", prt);    
-    srand(0);
+    srand(125482);
 
 #define READ_MATRIX_FROM_FILE 0
 #if READ_MATRIX_FROM_FILE
@@ -133,7 +133,7 @@ int test_amg_solver(ptree &pt) {
         A(i, i) += 1.0;
 #else
     cout << "# info: construct system matrix\n";
-    const size_t size = 8647;
+    const size_t size = 10455;
     MatrixXd A = MatrixXd::Random(size, size);
     for (size_t i = 0; i < A.rows(); ++i)
         A(i, i) += 5.0;
@@ -158,7 +158,10 @@ int test_amg_solver(ptree &pt) {
     cout << "# info: AMG solve\n";
     hj::util::high_resolution_clock clk;
     const double start = clk.ms();
-    sol->solve(rhs, x);
+    if ( pt.get<string>("prog.multigrid") == "FMG" )
+        sol->solveFMG(rhs, x);
+    else if ( pt.get<string>("prog.multigrid") == "VC" )
+        sol->solve(rhs, x);
     const double end = clk.ms();
     cout << "# time: " << end - start << endl;
     cout << (Ar*x).transpose().segment<20>(1000) << endl << endl;
@@ -185,8 +188,8 @@ int test_std_algorithm(ptree &pt) {
 }
 
 int test_amgcl(ptree &pt) {
-    srand(0);
-    const size_t size = 8647;
+    srand(12352);
+    const size_t size = 10455;
     MatrixXd A = MatrixXd::Random(size, size);
     for (size_t i = 0; i < A.rows(); ++i)
         A(i, i) += 5.0;

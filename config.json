@@ -1,9 +1,10 @@
 {
-  "#levels" : 3,
+  "#levels" : 2,
   "#cycle" : 1,
   "#iteration" : 50,
   "#prev_smooth" : 3,
   "#post_smooth" : 3,
+  "#FMG_inner_iteration" : 50,
   "smoother" : "gauss_seidel",
   "coarsener" : "ruge_stuben",
   "linear_solver" : "LU",

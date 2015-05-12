@@ -40,6 +40,7 @@ public:
     amg_solver(const boost::property_tree::ptree &pt);
     int compute(const spmat_csr &M);
     int solve(const vec &rhs, vec &x) const;
+    int solveFMG(const vec &rhs, vec &x) const;
     ptr_spmat_csr get_top_matrix() const;
     static void tag_red_black(const spmat_csr &A, std::vector<bool> &tag);
 private:
@@ -51,6 +52,7 @@ private:
     size_t nbr_outer_cycle_;
     size_t nbr_prev_;
     size_t nbr_post_;
+    size_t nbr_fmg_iter_;
     scalar tolerance_;
     std::string smooth_scheme_;
     std::string coarsen_scheme_;
