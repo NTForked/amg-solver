@@ -9,19 +9,19 @@
 #include "smoother.h"
 #include "amg_solver.h"
 
-#include "amgcl/amgcl.hpp"
-#include "amgcl/backend/builtin.hpp"
-#include "amgcl/backend/eigen.hpp"
-#include "amgcl/adapter/crs_tuple.hpp"
-#include "amgcl/coarsening/ruge_stuben.hpp"
-#include "amgcl/relaxation/damped_jacobi.hpp"
-#include "amgcl/relaxation/gauss_seidel.hpp"
-#include "amgcl/solver/bicgstab.hpp"
+//#include "amgcl/amgcl.hpp"
+//#include "amgcl/backend/builtin.hpp"
+//#include "amgcl/backend/eigen.hpp"
+//#include "amgcl/adapter/crs_tuple.hpp"
+//#include "amgcl/coarsening/ruge_stuben.hpp"
+//#include "amgcl/relaxation/damped_jacobi.hpp"
+//#include "amgcl/relaxation/gauss_seidel.hpp"
+//#include "amgcl/solver/bicgstab.hpp"
 
-#define CALL_SUB_PROG(prog)                      \
+#define CALL_SUB_PROG(prog)                    \
   int prog(ptree &pt);                         \
   if ( pt.get<string>("prog.value") == #prog ) \
-  return prog(pt);
+    return prog(pt);
 
 using namespace std;
 using namespace Eigen;
@@ -158,9 +158,9 @@ int test_amg_solver(ptree &pt) {
   cout << "# info: AMG solve\n";
   hj::util::high_resolution_clock clk;
   const double start = clk.ms();
-  if ( pt.get<string>("prog.multigrid") == "FMG" )
+  if ( pt.get<string>("multigrid.value") == "FMG" )
     sol->solveFMG(rhs, x);
-  else if ( pt.get<string>("prog.multigrid") == "VC" )
+  else if ( pt.get<string>("multigrid.value") == "VC" )
     sol->solve(rhs, x);
   const double end = clk.ms();
   cout << "# time: " << end - start << endl;
@@ -187,54 +187,54 @@ int test_std_algorithm(ptree &pt) {
   return 0;
 }
 
-int test_amgcl(ptree &pt) {
-  srand(12352);
-  const size_t size = 10455;
-  MatrixXd A = MatrixXd::Random(size, size);
-  for (size_t i = 0; i < A.rows(); ++i)
-    A(i, i) += 5.0;
+//int test_amgcl(ptree &pt) {
+//  srand(12352);
+//  const size_t size = 10455;
+//  MatrixXd A = MatrixXd::Random(size, size);
+//  for (size_t i = 0; i < A.rows(); ++i)
+//    A(i, i) += 5.0;
 
-  const size_t sp_ratio = 0.001;
-  const size_t zero_count = A.rows()*A.cols()*(1.0-sp_ratio);
-  for (size_t cnt = 0; cnt < 5*zero_count; ++cnt) {
-    size_t I = rand() % size;
-    size_t J = rand() % size;
-    if ( I != J )
-      A(I, J) = 0;
-  }
+//  const size_t sp_ratio = 0.001;
+//  const size_t zero_count = A.rows()*A.cols()*(1.0-sp_ratio);
+//  for (size_t cnt = 0; cnt < 5*zero_count; ++cnt) {
+//    size_t I = rand() % size;
+//    size_t J = rand() % size;
+//    if ( I != J )
+//      A(I, J) = 0;
+//  }
 
-  VectorXd rhs0 = VectorXd::Random(A.cols());
-  cout << rhs0.transpose().segment<20>(1000) << endl << endl;
+//  VectorXd rhs0 = VectorXd::Random(A.cols());
+//  cout << rhs0.transpose().segment<20>(1000) << endl << endl;
 
-  SparseMatrix<double, RowMajor> Ar = A.sparseView();
-  cout << ((double)Ar.nonZeros())/A.cols()/A.rows() << endl;
-  Ar.makeCompressed();
+//  SparseMatrix<double, RowMajor> Ar = A.sparseView();
+//  cout << ((double)Ar.nonZeros())/A.cols()/A.rows() << endl;
+//  Ar.makeCompressed();
 
-  int n = Ar.rows();
-  int nnz = Ar.nonZeros();
-  std::vector<double> val(Ar.valuePtr(), Ar.valuePtr()+nnz);
-  std::vector<int>    col(Ar.innerIndexPtr(), Ar.innerIndexPtr()+nnz);
-  std::vector<int>    ptr(Ar.outerIndexPtr(), Ar.outerIndexPtr()+n+1);
-  std::vector<double> rhs(rhs0.data(), rhs0.data()+n);
+//  int n = Ar.rows();
+//  int nnz = Ar.nonZeros();
+//  std::vector<double> val(Ar.valuePtr(), Ar.valuePtr()+nnz);
+//  std::vector<int>    col(Ar.innerIndexPtr(), Ar.innerIndexPtr()+nnz);
+//  std::vector<int>    ptr(Ar.outerIndexPtr(), Ar.outerIndexPtr()+n+1);
+//  std::vector<double> rhs(rhs0.data(), rhs0.data()+n);
 
-  typedef amgcl::amg<
-      amgcl::backend::builtin<double>,
-      amgcl::coarsening::ruge_stuben,
-      amgcl::relaxation::gauss_seidel
-      > AMG;
+//  typedef amgcl::amg<
+//      amgcl::backend::builtin<double>,
+//      amgcl::coarsening::ruge_stuben,
+//      amgcl::relaxation::gauss_seidel
+//      > AMG;
 
-  AMG amg(boost::tie(n, ptr, col, val));
-  std::cout << amg << std::endl;
+//  AMG amg(boost::tie(n, ptr, col, val));
+//  std::cout << amg << std::endl;
 
-  std::vector<double> x(n, 0);
-  amg.apply(rhs, x);
+//  std::vector<double> x(n, 0);
+//  amg.apply(rhs, x);
 
-  Map<const VectorXd> X(&x[0], x.size());
-  VectorXd RHS = Ar * X;
-  cout << RHS.transpose().segment<20>(1000) << endl;
+//  Map<const VectorXd> X(&x[0], x.size());
+//  VectorXd RHS = Ar * X;
+//  cout << RHS.transpose().segment<20>(1000) << endl;
 
-  return 0;
-}
+//  return 0;
+//}
 
 int main(int argc, char *argv[])
 {
@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
     CALL_SUB_PROG(test_red_black_gs);
     CALL_SUB_PROG(test_amg_solver);
     CALL_SUB_PROG(test_std_algorithm);
-    CALL_SUB_PROG(test_amgcl);
+//    CALL_SUB_PROG(test_amgcl);
   } catch (const boost::property_tree::ptree_error &e) {
     cerr << "Usage: " << endl;
     zjucad::show_usage_info(std::cerr, pt);

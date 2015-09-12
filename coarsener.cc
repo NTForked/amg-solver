@@ -5,12 +5,12 @@
 using namespace std;
 using namespace Eigen;
 
-#define CHECK_EQUAL(x, y)                                                          \
-  do {                                                                           \
-  if ( (x) != (y) ) {                                                        \
-  printf("# assertion failed in file %s line %d\n", __FILE__, __LINE__); \
-  exit(0);                                                               \
-  }                                                                          \
+#define CHECK_EQUAL(x, y)                                                    \
+  do {                                                                       \
+    if ( (x) != (y) ) {                                                      \
+      printf("# assertion failed in file %s line %d\n", __FILE__, __LINE__); \
+      exit(0);                                                               \
+    }                                                                        \
   } while (0);
 
 namespace amg {
