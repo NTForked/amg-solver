@@ -4,6 +4,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <jtflib/mesh/io.h>
 #include <unordered_set>
+#include <chrono>
 
 #include "amg_solver.h"
 
@@ -153,7 +154,7 @@ int main(int argc, char *argv[])
   boost::property_tree::ptree pt;
   pt.put("#levels", 3);
   pt.put("#cycle", 1);
-  pt.put("#iteration", 100);
+  pt.put("#iteration", 1000);
   pt.put("#prev_smooth", 3);
   pt.put("#post_smooth", 3);
   pt.put("#FMG_inner_iteration", 0);
@@ -169,9 +170,17 @@ int main(int argc, char *argv[])
   SparseMatrix<double> L;
   cotmatrix(tris, nods, &L);
   VectorXd hf = VectorXd::Zero(nods.size(2));
-  hf[0] = 1.0; hf[hf.size()-1] = -1.0;
+  hf[27] = hf[10] = hf[0] = hf[20] = 10.0;
+  hf[6145] = hf[7] = hf[3] = hf[14] = -10.0;
   unordered_set<size_t> fixDOF;
-  fixDOF.insert(0); fixDOF.insert(hf.size()-1);
+  fixDOF.insert(27);
+  fixDOF.insert(10);
+  fixDOF.insert(0);
+  fixDOF.insert(20);
+  fixDOF.insert(6145);
+  fixDOF.insert(7);
+  fixDOF.insert(3);
+  fixDOF.insert(14);
   vector<size_t> g2l;
   build_global_local_mapping<size_t>(nods.size(2), fixDOF, g2l);
   VectorXd rhs = VectorXd::Zero(nods.size(2));
@@ -179,18 +188,30 @@ int main(int argc, char *argv[])
   rm_spmat_col_row(L, g2l);
   rm_vector_row(rhs, g2l);
 
+  VectorXd dx;
+  chrono::high_resolution_clock clk;
+
+  amg::amg_solver amg_sol(pt);
+  auto t2 = clk.now();
+  amg_sol.compute(L);
+  amg_sol.solve(rhs, dx);
+  auto t3 = clk.now();
+  chrono::nanoseconds ns1 = chrono::duration_cast<chrono::nanoseconds>(t3-t2);
+  cout << "[info] amg solve time: " << 1e-9*ns1.count() << " sec\n";
+
   SimplicialCholesky<SparseMatrix<double>> sol;
+  auto t0 = clk.now();
   sol.compute(L);
-  VectorXd dx = sol.solve(rhs);
+  dx = sol.solve(rhs);
+  auto t1 = clk.now();
+  chrono::nanoseconds ns0 = chrono::duration_cast<chrono::nanoseconds>(t1-t0);
+  cout << "[info] direct solve time: " << 1e-9*ns0.count() << " sec\n";
+
   VectorXd DX = VectorXd::Zero(nods.size(2));
   rc_vector_row(dx, g2l, DX);
   hf += DX;
 
   draw_vert_value_to_vtk("./hf.vtk", &nods[0], nods.size(2), &tris[0], tris.size(2), &hf[0]);
-
-  //  shared_ptr<amg::amg_solver> sol = std::make_shared<amg::amg_solver>(pt);
-  //  sol->compute(A);
-  //  sol->solve(rhs, x);
 
   cout << "[info] done\n";
   return 0;
